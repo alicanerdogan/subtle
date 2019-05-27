@@ -1,0 +1,12 @@
+[package]
+name = "subfind"
+version = "0.1.0"
+authors = ["Alican Erdogan <alican.erdogan@zalando.de>"]
+edition = "2018"
+
+[dependencies]
+clap = "2.33.0"
+indicatif = "0.11.0"
+rust-crypto = "0.2.36"
+reqwest = "0.9.17"
+dialoguer = "0.4.0"

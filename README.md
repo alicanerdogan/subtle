@@ -1,5 +1,7 @@
 # subtle
 
+[![Build Status](https://travis-ci.org/alicanerdogan/subtle.svg?branch=master)](https://travis-ci.org/alicanerdogan/subtle)
+
 subtle is a cli application which is handy to download subtitles for movies and tv shows.
 
 ![CLI Animation](./docs/cli.gif)

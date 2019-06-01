@@ -6,7 +6,7 @@ use std::vec::Vec;
 use xmlrpc::{Request, Value};
 
 const ENDPOINT: &str = "https://api.opensubtitles.org:443/xml-rpc";
-const USER_AGENT: &str = "subtle-cli v1.0.0";
+const USER_AGENT: &str = "subtle-cli v0.1";
 const USERNAME: &str = "";
 const PASSSWORD: &str = "";
 const LANG: &str = "en";

@@ -1,11 +1,20 @@
 dist: xenial
 language: rust
 rust:
-  - stable
+- stable
 cache: cargo
 script:
-  - cargo build --verbose --all
-  - cargo test --verbose --all
+- cargo build --verbose --all
+- cargo test --verbose --all
 branches:
   only:
   - master
+deploy:
+  provider: releases
+  api_key:
+    secure: Rkzn6ifW+oY9XcJqdy9rHtB7jUD+CAq3W6TUNvvtP451tPhAfG3qecpc4jcf6yCZLuBH4VO/ypxRvu2QANR8JgTP1Z14PJwDLfGFZIN1Hh0sqtZV/EAK2KDWXndpExG7qZnp8scdpOFeP9kDEPfI43dEih+HbAOfe0YaCWv9oHv8oBCh5dCYdvk6xEsGEGUC5UZgPOiWKdNDI01BiZSBLqNjYhcqFrLbp/CbeP55s5MYe/HTDjW6Nksry6CiLUkuu104xnDGgpzyHl2TW3aIaEephmbe7cElti5cEHhB/sAN01a+hldrVoMXth9tnN4wKAj5jM0dvKMM/ViDdvCtpgPOWZRjILgxHDp4K3Y7IHZO+wPZKk+C7qReImrFj8vQBl6A5+g8PfNiHGOwuCaL7Ys1ra3AUKTcURHG5vxTKP78yddiQpfMAdQ74DqhCuCU7x5rLRJCuoKsZrsahW+g10Jtmn99sZMvo675B/xG1JFMmcQoPaEtIa6YSowp3qKeNmj5/buNtbVBkMxO6P3uNQoDwk20RQpP4GIx4YcQpStABzvo+KLFMHyxCCWBkpvk9/ZATn9qZ35egpGvg5iHXPf35rPGkElu3uOcT/xeHKgZ4TmQH8MiJEnerUaAotkL/jBkkE2VqN/v5f68/o5UZw9B6AeB94iVEnjwRtdj8W0=
+  skip_cleanup: true
+  file: target/release/subtle
+  on:
+    repo: alicanerdogan/subtle
+    tags: true

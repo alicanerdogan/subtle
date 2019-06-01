@@ -9,6 +9,7 @@ script:
 branches:
   only:
   - master
+  - /^v\d+\.\d+.*$/
 deploy:
   provider: releases
   api_key:

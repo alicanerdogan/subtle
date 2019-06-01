@@ -4,7 +4,7 @@ rust:
 - stable
 cache: cargo
 script:
-- cargo build --verbose --all
+- cargo build --verbose --all --release
 - cargo test --verbose --all
 branches:
   only:

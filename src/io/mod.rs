@@ -29,9 +29,19 @@ pub fn get_bytesize(filepath: &str) -> std::io::Result<u64> {
 }
 
 pub fn get_basename(filepath: &str) -> std::io::Result<String> {
-  let path = Path::new(filepath).parent().unwrap();
+  let path = Path::new(filepath)
+    .parent()
+    .unwrap_or_else(|| Path::new("./"));
 
-  Ok(String::from(path.to_str().unwrap()))
+  let path = path.to_str().unwrap();
+
+  Ok(String::from({
+    if path.is_empty() {
+      "./"
+    } else {
+      path
+    }
+  }))
 }
 
 pub fn get_filename(filepath: &str) -> std::io::Result<String> {
@@ -107,5 +117,30 @@ pub fn extract_zip_file(zip_filepath: &str, extracted_file: &str, target_filenam
         }
       }
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  #[test]
+  fn basename() {
+    let basename = super::get_basename("").unwrap();
+    assert_eq!(basename, "./");
+    let basename = super::get_basename("test").unwrap();
+    assert_eq!(basename, "./");
+    let basename = super::get_basename("test/123").unwrap();
+    assert_eq!(basename, "test");
+    let basename = super::get_basename("test/123.txt").unwrap();
+    assert_eq!(basename, "test");
+    let basename = super::get_basename("test/abc/123.txt").unwrap();
+    assert_eq!(basename, "test/abc");
+    let basename = super::get_basename("/test").unwrap();
+    assert_eq!(basename, "/");
+    let basename = super::get_basename("/test/123").unwrap();
+    assert_eq!(basename, "/test");
+    let basename = super::get_basename("/test/123.txt").unwrap();
+    assert_eq!(basename, "/test");
+    let basename = super::get_basename("/test/abc/123.txt").unwrap();
+    assert_eq!(basename, "/test/abc");
   }
 }

@@ -29,9 +29,16 @@ pub fn download(url: &str, directory: &str) -> String {
 
   let mut tuple = {
     let filename = { get_filename_from_response(&response) };
-    let filepath = std::fs::canonicalize(&Path::new(directory))
-      .unwrap()
-      .join(Path::new(filename));
+    println!("{}", directory);
+    let filepath = std::fs::canonicalize(&Path::new({
+      if directory.is_empty() {
+        "./"
+      } else {
+        directory
+      }
+    }))
+    .unwrap()
+    .join(Path::new(filename));
     (
       String::from(filepath.to_str().unwrap()),
       File::create(filepath).unwrap(),

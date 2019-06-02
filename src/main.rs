@@ -5,22 +5,34 @@ mod io;
 mod services;
 mod terminal;
 
-use clap::{App, Arg};
+use clap::{App, Arg, SubCommand};
 use terminal::progress_bar;
+
+// SUBCOMMANDS
+const LIST_LANGUAGES_CMD: &str = "list-languages";
 
 fn main() {
   let matches = App::new("subtle")
     .version("0.1.0")
     .author("Alican Erdogan <aerdogan07@gmail.com>")
     .about("subtitle finder for movies and tv series")
+    .subcommand(SubCommand::with_name(LIST_LANGUAGES_CMD).about("list available languages"))
     .arg(
       Arg::with_name("FILE")
-        .required(true)
+        .required(false)
         .takes_value(true)
         .index(1)
-        .help("url to download"),
+        .help("media file"),
     )
     .get_matches();
+
+  match matches.subcommand_name() {
+    Some(LIST_LANGUAGES_CMD) => {
+      list_languages();
+      return;
+    }
+    _ => (),
+  }
 
   let file = matches.value_of("FILE").unwrap();
   println!("{}", file);
@@ -66,4 +78,22 @@ fn main() {
   io::extract_zip_file(&zip_path, &selected_subtitle_entry.filename, &filename);
   io::remove_file(&zip_path);
   println!("Done: {}", &selected_subtitle_entry.filename);
+}
+
+fn list_languages() {
+  let spinner = progress_bar::create_spinner("Loading available languages...");
+  spinner.enable_steady_tick(64);
+  let languages = services::opensubtitles::get_languages().unwrap();
+  spinner.finish_and_clear();
+  for lang in languages {
+    println!(
+      "{} | {} {}",
+      &lang.name,
+      &lang.iso,
+      console::Emoji(
+        &terminal::emojis::get_flag_emoji(&lang.iso).unwrap_or(String::new()),
+        ""
+      )
+    );
+  }
 }

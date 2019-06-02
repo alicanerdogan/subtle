@@ -26,6 +26,58 @@ pub fn get_token() -> Result<String, Box<std::error::Error>> {
 }
 
 #[derive(Debug)]
+pub struct Language {
+  pub id: String,
+  pub name: String,
+  pub iso: String,
+}
+
+impl Language {
+  fn from_value(value: &Value) -> Language {
+    Language {
+      id: value
+        .get("SubLanguageID")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .to_string(),
+      name: value
+        .get("LanguageName")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .to_string(),
+      iso: value.get("ISO639").unwrap().as_str().unwrap().to_string(),
+    }
+  }
+}
+
+pub fn get_languages() -> Result<Vec<Language>, Box<std::error::Error>> {
+  let resp = Request::new("GetSubLanguages").call_url(ENDPOINT).unwrap();
+
+  let data = resp.get("data").unwrap().as_array().unwrap();
+
+  let languages: Vec<Language> = data
+    .into_iter()
+    .map(|raw_entry| Language::from_value(raw_entry))
+    .collect();
+
+  Ok(languages)
+}
+
+#[allow(dead_code)]
+pub fn get_languages_map(
+  languages: &Vec<Language>,
+) -> Result<BTreeMap<String, String>, Box<std::error::Error>> {
+  let mut m = BTreeMap::new();
+  languages.iter().for_each(|lang| {
+    m.insert(lang.iso.to_string(), lang.name.to_string());
+  });
+
+  Ok(m)
+}
+
+#[derive(Debug)]
 pub struct SubtitleEntry {
   pub imdb_id: String,
   pub subtitle_id: String,
@@ -267,4 +319,13 @@ pub fn get_subtitle_map(entries: Vec<SubtitleEntry>) -> BTreeMap<String, Vec<Sub
   }
 
   entry_map
+}
+
+
+#[cfg(test)]
+mod tests {
+  #[test]
+  fn languages() {
+    super::get_languages().unwrap();
+  }
 }

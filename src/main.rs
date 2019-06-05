@@ -11,6 +11,9 @@ use terminal::progress_bar;
 // SUBCOMMANDS
 const LIST_LANGUAGES_CMD: &str = "list-languages";
 
+// OPTION ARGS
+const LANG_OPT: &str = "lang";
+
 fn main() {
   let matches = App::new("subtle")
     .version("0.1.0")
@@ -24,6 +27,16 @@ fn main() {
         .index(1)
         .help("media file"),
     )
+    .arg(
+      Arg::with_name(LANG_OPT)
+        .help("subtitle language")
+        .takes_value(true)
+        .short("l")
+        .long("lang")
+        .multiple(true)
+        .required(false)
+        .requires("FILE"),
+    )
     .get_matches();
 
   match matches.subcommand_name() {
@@ -34,6 +47,29 @@ fn main() {
     _ => (),
   }
 
+  let desired_languages: Option<Vec<String>> = {
+    if !matches.is_present(LANG_OPT) {
+      None
+    } else {
+      let languages = services::opensubtitles::get_languages().unwrap();
+      let language_map = services::opensubtitles::get_languages_map(&languages).unwrap();
+      let lang_opts: Vec<String> = matches
+        .values_of(LANG_OPT)
+        .unwrap()
+        .map(|opt| language_map.get(opt))
+        .filter(|&language_name| language_name != None)
+        .map(|language_name| language_name.unwrap())
+        .map(|language_name| language_name.to_string())
+        .collect();
+
+      if lang_opts.len() == 0 {
+        None
+      } else {
+        Some(lang_opts)
+      }
+    }
+  };
+
   let file = matches.value_of("FILE").unwrap();
   println!("{}", file);
 
@@ -43,9 +79,21 @@ fn main() {
   let spinner = progress_bar::create_spinner("Loading...");
   spinner.enable_steady_tick(64);
   let entries = services::opensubtitles::search_with_tag(&filename);
+  let entries: Vec<services::opensubtitles::SubtitleEntry> = match desired_languages {
+    Some(desired_languages) => entries
+      .into_iter()
+      .filter(|entry| desired_languages.iter().any(|opt| opt == &entry.lang))
+      .collect(),
+    None => entries,
+  };
   let entries_map = services::opensubtitles::get_subtitle_map(entries);
   let entry_titles = services::opensubtitles::get_subtitle_titles(&entries_map);
   spinner.finish_and_clear();
+
+  if entry_titles.len() == 0 {
+    println!("No subtitles were found.");
+    return;
+  }
 
   let selected_subtitle_index =
     terminal::select::create_select(&entry_titles, "Which subtitle do you want to download?")

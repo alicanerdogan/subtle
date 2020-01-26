@@ -13,3 +13,10 @@ xmlrpc = "0.13.1"
 zip = "0.5.2"
 console = "0.7.5"
 regex = "1.1.6"
+
+[profile.release]
+lto = true # Link Time Optimization
+opt-level = 'z' # Optimize for size.
+codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization
+
+# Don't forget to strip symbol info: strip target/release/gistr

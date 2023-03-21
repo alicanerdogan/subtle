@@ -1,6 +1,5 @@
-extern crate console;
-
 use regex::Regex;
+
 fn is_code_valid(isocode: &str) -> bool {
     let re = Regex::new(r"(?i)^[a-z]{2}$").unwrap();
     re.is_match(isocode)
@@ -15,15 +14,6 @@ fn get_utf16(c: &char) -> u16 {
 
 fn get_uppercase(c: &char) -> char {
     c.to_uppercase().next().unwrap()
-}
-
-#[allow(dead_code)]
-fn to_u8(x: u32) -> [u8; 4] {
-    let b1: u8 = ((x >> 24) & 0xff) as u8;
-    let b2: u8 = ((x >> 16) & 0xff) as u8;
-    let b3: u8 = ((x >> 8) & 0xff) as u8;
-    let b4: u8 = (x & 0xff) as u8;
-    return [b1, b2, b3, b4];
 }
 
 fn to_utf8(codepoint: u32) -> Vec<u8> {

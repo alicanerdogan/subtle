@@ -1,21 +1,10 @@
-extern crate reqwest;
-
 pub mod opensubtitles;
-pub mod subdb;
-
-#[allow(dead_code)]
-pub fn call() -> Result<String, Box<std::error::Error>> {
-    let mut resp = reqwest::get("https://httpbin.org/ip")?;
-    // let json: HashMap<String, String> = resp.json()?;
-    let text = resp.text()?;
-    Ok(text)
-}
 
 use std::fs::File;
 use std::io::copy;
-use std::path::Path;
+use std::path::PathBuf;
 
-fn get_filename_from_response(response: &reqwest::Response) -> &str {
+fn get_filename_from_response(response: &reqwest::blocking::Response) -> &str {
     response
         .url()
         .path_segments()
@@ -24,28 +13,33 @@ fn get_filename_from_response(response: &reqwest::Response) -> &str {
         .unwrap_or("sub.zip")
 }
 
-pub fn download(url: &str, directory: &str) -> String {
-    let mut response = reqwest::get(url).unwrap();
+pub fn download(url: &str, source_filename: &str, directory: &PathBuf) {
+    let mut response = reqwest::blocking::get(url).unwrap();
 
-    let mut tuple = {
-        let filename = { get_filename_from_response(&response) };
-        println!("{}", directory);
-        let filepath = std::fs::canonicalize(&Path::new({
-            if directory.is_empty() {
-                "./"
-            } else {
-                directory
-            }
-        }))
-        .unwrap()
-        .join(Path::new(filename));
-        (
-            String::from(filepath.to_str().unwrap()),
-            File::create(filepath).unwrap(),
-        )
+    let filename = get_filename_from_response(&response);
+    let filename_buffer = PathBuf::from(filename);
+    let extension = filename_buffer
+        .extension()
+        .map(|ext| ext.to_str())
+        .unwrap_or(Some("str"))
+        .unwrap();
+
+    // if source_filename is empty, use the filename from the response
+    let filename = if source_filename.is_empty() {
+        String::from(filename)
+    } else {
+        // otherwise, use the source_filename
+        // and remove the extension from the source_filename
+        let source_filename_filestem = PathBuf::from(source_filename);
+        let filestem = source_filename_filestem
+            .file_stem()
+            .unwrap()
+            .to_str()
+            .unwrap();
+        String::from(filestem)
     };
+    let filepath = directory.join(format!("{}.{}", filename, extension));
 
-    copy(&mut response, &mut tuple.1).unwrap();
-
-    tuple.0
+    let mut file = File::create(filepath).unwrap();
+    copy(&mut response, &mut file).unwrap();
 }

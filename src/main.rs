@@ -2,6 +2,8 @@ use clap::{arg, command, Command};
 use std::path::Path;
 use std::time::Duration;
 mod io;
+use console::Term;
+use strsim::normalized_levenshtein;
 mod services;
 mod terminal;
 
@@ -23,7 +25,7 @@ fn list_languages() {
     }
 }
 
-fn download_subtitle(filename: String, lang: Option<&String>) {
+fn download_subtitle(filename: String, lang: Option<&String>, should_sort: bool) {
     enum ActionState {
         ListingSubtitles,
         ConfirmingSelection,
@@ -36,7 +38,13 @@ fn download_subtitle(filename: String, lang: Option<&String>) {
 
     let mut entries = services::opensubtitles::search_subtitles(&filename, lang);
     spinner.finish_and_clear();
-    entries.sort_by(|b, a| (a.attributes.download_count).cmp(&b.attributes.download_count));
+    if !should_sort {
+        entries.sort_by(|b, a| {
+            normalized_levenshtein(&a.attributes.release, &filename)
+                .partial_cmp(&normalized_levenshtein(&b.attributes.release, &filename))
+                .unwrap()
+        });
+    }
     let select_entries: Vec<String> = entries
         .iter()
         .map(|entry| {
@@ -96,7 +104,10 @@ fn download_subtitle(filename: String, lang: Option<&String>) {
 
                 match selected_file_index {
                     Some(_) => state = ActionState::DownloadingSubtitle,
-                    None => state = ActionState::Exiting,
+                    None => {
+                        Term::stderr().clear_last_lines(1).unwrap_or_default();
+                        state = ActionState::ListingSubtitles;
+                    }
                 }
             }
             ActionState::DownloadingSubtitle => {
@@ -159,6 +170,7 @@ fn main() {
         .version("1.0.0")
         .author("Alican Erdogan <aerdogan07@gmail.com>")
         .about("subtitle finder for movies and tv series")
+        .subcommand_negates_reqs(true)
         .subcommand(Command::new(LIST_LANGUAGES_CMD).about("list available languages"))
         .arg(arg!([filename] "Media file name or search parameter").required(true))
         .arg(
@@ -167,6 +179,7 @@ fn main() {
             )
             .required(false),
         )
+        .arg(arg!(-s --sort "Sorts the results by download count"))
         .get_matches();
 
     match matches.subcommand_name() {
@@ -192,6 +205,7 @@ fn main() {
 
     let filename = filename.unwrap().to_owned();
     let lang = matches.get_one::<String>("lang");
+    let should_sort = matches.get_one::<bool>("sort").unwrap_or(&false).to_owned();
 
-    download_subtitle(filename, lang);
+    download_subtitle(filename, lang, should_sort);
 }

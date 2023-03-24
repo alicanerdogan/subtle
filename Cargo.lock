@@ -863,6 +863,7 @@ dependencies = [
  "regex",
  "reqwest",
  "serde",
+ "strsim",
  "urlencoding",
  "xmlrpc",
 ]
